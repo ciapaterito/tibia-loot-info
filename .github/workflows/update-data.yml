@@ -1,0 +1,98 @@
+name: Dane i GitHub Pages
+
+on:
+  schedule:
+    - cron: '23 4 * * 1'        # co poniedziałek, 04:23 UTC
+  workflow_dispatch:
+    inputs:
+      full_refresh:
+        description: 'Odśwież wszystko (ceny NPC i grafiki), nie tylko braki i najstarsze'
+        type: boolean
+        default: false
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'data/**'
+      - '**.md'
+
+permissions:
+  contents: write   # commit katalogu data/
+  pages: write      # deploy na GitHub Pages
+  id-token: write   # wymagane przez actions/deploy-pages
+  actions: write    # podtrzymanie harmonogramu (krok "keep-alive")
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Czy generować dane?
+        id: plan
+        run: |
+          # harmonogram i ręczne uruchomienie: zawsze; zwykły push: tylko gdy data/ jeszcze nie istnieje
+          if [ "${{ github.event_name }}" != "push" ] || [ ! -f data/meta.json ]; then
+            echo "generate=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "generate=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-python@v5
+        if: steps.plan.outputs.generate == 'true'
+        with:
+          python-version: '3.12'
+
+      - name: Zależności
+        if: steps.plan.outputs.generate == 'true'
+        run: pip install beautifulsoup4
+
+      - name: Generuj dane (moby, loot, NPC, ceny, grafiki)
+        if: steps.plan.outputs.generate == 'true'
+        run: python scripts/build_data.py ${{ inputs.full_refresh && '--full' || '' }}
+
+      - name: Zapisz dane w repozytorium
+        if: steps.plan.outputs.generate == 'true'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A data
+          if git diff --cached --quiet; then
+            echo "Brak zmian w danych."
+          else
+            git commit -m "data: aktualizacja $(date -u +%F)"
+            git push || (git pull --rebase && git push)
+          fi
+
+      - name: Keep-alive (GitHub wyłącza harmonogram po 60 dniach bez aktywności)
+        if: github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/update-data.yml/enable" || true
+
+      - name: Złóż stronę (bez state.json - to plik roboczy skryptu)
+        run: |
+          mkdir -p _site
+          cp index.html _site/
+          if [ -d data ]; then rsync -a --exclude 'state.json' data/ _site/data/; fi
+          du -sh _site
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
