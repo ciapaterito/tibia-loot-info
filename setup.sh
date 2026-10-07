@@ -48,7 +48,11 @@ enable_pages(){
 
 say "5/6 Wlaczam GitHub Pages i wysylam pliki"
 enable_pages && echo "Pages wlaczone (Source: GitHub Actions)." || echo "(Pages wlacze po wyslaniu plikow)"
-git push -u origin main || die "Nie udalo sie wyslac plikow (git push)."
+if ! git push -u origin main; then
+  echo "Na GitHubie sa juz jakies pliki (np. dane z wczesniejszego uruchomienia). Lacze je z Twoimi..."
+  git pull --rebase -X theirs origin main || { git rebase --abort 2>/dev/null; die "Nie udalo sie polaczyc z tym, co jest na GitHubie. Najprosciej: usun repozytorium $OWNER/$REPO na github.com (Settings -> Delete this repository) i uruchom skrypt ponownie."; }
+  git push -u origin main || die "Nie udalo sie wyslac plikow (git push)."
+fi
 enable_pages && echo "Pages: OK" || echo "UWAGA: nie udalo sie wlaczyc Pages automatycznie - zrob to recznie: https://github.com/$OWNER/$REPO/settings/pages -> Source: GitHub Actions"
 
 say "6/6 Uruchamiam pierwsze generowanie danych"

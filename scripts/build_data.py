@@ -222,6 +222,41 @@ def title_candidates(name):
     return out
 
 
+_IRREG = {"men": "man", "women": "woman", "feet": "foot", "teeth": "tooth", "mice": "mouse", "geese": "goose", "knives": "knife", "wolves": "wolf", "leaves": "leaf", "halves": "half", "loaves": "loaf"}
+
+
+def _sing_word(w):
+    """Mozliwe liczby pojedyncze jednego slowa (angielski), od najbardziej prawdopodobnej."""
+    lw = w.lower()
+    if lw in _IRREG:
+        return [_IRREG[lw]]
+    out = []
+    if lw.endswith("ies") and len(lw) > 4:
+        out.append(lw[:-3] + "y")
+    if lw.endswith("ves") and len(lw) > 4:
+        out += [lw[:-3] + "f", lw[:-3] + "fe"]
+    if re.search(r"(s|x|z|ch|sh|o)es$", lw):
+        out.append(lw[:-2])
+    if lw.endswith("s") and not lw.endswith("ss") and len(lw) > 3:
+        out.append(lw[:-1])
+    return out
+
+
+def singular_candidates(name):
+    """'bananas' -> ['banana']; 'pieces of cloth' -> ['piece of cloth']; 'amber sickles' -> ['amber sickle']."""
+    words = WS.sub(" ", name).strip().split(" ")
+    if not words or not words[0]:
+        return []
+    idx = words.index("of") - 1 if "of" in words[1:] else len(words) - 1
+    if idx < 0:
+        idx = 0
+    res = []
+    for sw in _sing_word(words[idx]):
+        res.append(" ".join(words[:idx] + [sw] + words[idx + 1:]))
+    return res
+
+
+
 def file_slug(name):
     s = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
     return s or hashlib.md5(name.encode()).hexdigest()[:8]
@@ -636,6 +671,35 @@ def main():
         for _, got, err in pmap(canon_batch, list(chunks(unknown, 12)), min(a.workers, 2)):
             if err is None:
                 canon.update(got)
+        # druga runda: TibiaData podaje czesto liczbe mnoga ("bananas") - szukamy liczby pojedynczej
+        plural_left = [n for n in unknown if n not in canon and singular_candidates(n)]
+        if plural_left:
+            def sing_batch(batch):
+                titles = []
+                for n in batch:
+                    for sc in singular_candidates(n):
+                        titles += title_candidates(sc)
+                exist = existing_titles_batch(titles)
+                res_ = {}
+                for n in batch:
+                    hit = None
+                    for sc in singular_candidates(n):
+                        for c in title_candidates(sc):
+                            if c in exist:
+                                hit = exist[c]
+                                break
+                        if hit:
+                            break
+                    if hit:
+                        res_[n] = hit
+                return res_
+
+            found = 0
+            for _, got, err in pmap(sing_batch, list(chunks(plural_left, 8)), min(a.workers, 2)):
+                if err is None:
+                    canon.update(got)
+                    found += len(got)
+            log(f"      liczba pojedyncza dopasowana na wiki dla {found} z {len(plural_left)} itemów")
         still = [n for n in unknown if n not in canon]
         for n in still:  # nie potwierdzone na wiki - sensowna wielkość liter, ale nie zapisujemy tego na stałe
             tmp_canon[n] = smart_title(n)

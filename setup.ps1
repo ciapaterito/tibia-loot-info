@@ -65,7 +65,13 @@ function EnablePages {
 Say "5/6 Wlaczam GitHub Pages i wysylam pliki"
 if (EnablePages) { Write-Host "Pages wlaczone (Source: GitHub Actions)." } else { Write-Host "(Pages wlacze po wyslaniu plikow)" }
 git push -u origin main
-if ($LASTEXITCODE -ne 0) { Die "Nie udalo sie wyslac plikow (git push)." }
+if ($LASTEXITCODE -ne 0) {
+  Write-Host "Na GitHubie sa juz jakies pliki (np. dane z wczesniejszego uruchomienia). Lacze je z Twoimi..." -ForegroundColor Yellow
+  git pull --rebase -X theirs origin main
+  if ($LASTEXITCODE -ne 0) { git rebase --abort 2>$null; Die "Nie udalo sie polaczyc z tym, co jest na GitHubie. Najprosciej: usun repozytorium $Owner/$Repo na github.com (Settings -> Delete this repository) i uruchom START.bat jeszcze raz." }
+  git push -u origin main
+  if ($LASTEXITCODE -ne 0) { Die "Nie udalo sie wyslac plikow (git push)." }
+}
 if (EnablePages) { Write-Host "Pages: OK" } else { Write-Host "UWAGA: nie udalo sie wlaczyc Pages automatycznie - zrob to recznie: https://github.com/$Owner/$Repo/settings/pages -> Source: GitHub Actions" -ForegroundColor Yellow }
 
 Say "6/6 Uruchamiam pierwsze generowanie danych"

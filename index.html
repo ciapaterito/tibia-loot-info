@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Tibia Loot Info</title>
+<title>Tibia: loot z mobów, ceny NPC i boosted na dziś</title>
 <style>
 :root{
   color-scheme: light dark;
@@ -14,7 +14,7 @@
   --border:#2a3443;
   --text:#edf2f7;
   --muted:#9ba7b7;
-  --accent:#8fd3ff;
+  --accent:#e3b95c;
   --accent2:#b9f7d0;
   --danger:#ff9d9d;
   --warn:#ffd98c;
@@ -23,7 +23,7 @@
 @media (prefers-color-scheme: light){
   :root{
     --bg:#eef2f6;--surface:#fff;--surface2:#f5f7fa;--surface3:#f8fafc;--border:#dce3eb;
-    --text:#18212b;--muted:#5d6b7a;--accent:#1777b5;--accent2:#16764a;--danger:#b42318;--warn:#9a6700;
+    --text:#18212b;--muted:#5d6b7a;--accent:#8a5a00;--accent2:#16764a;--danger:#b42318;--warn:#9a6700;
     --shadow:0 10px 30px rgba(20,40,70,.08);
   }
 }
@@ -32,8 +32,7 @@ body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 Inter,ui-san
 #app{min-height:100vh;background:var(--bg);}
 .wrap{max-width:1320px;margin:0 auto;padding:28px 22px 50px}
 .header{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:22px}
-.kicker{color:var(--accent);font-weight:700;letter-spacing:.11em;text-transform:uppercase;font-size:12px}
-h1{font-size:30px;line-height:1.1;margin:5px 0 6px;letter-spacing:-.03em}
+h1{font:700 32px/1.1 'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;margin:0 0 8px;letter-spacing:-.01em}
 .sub{color:var(--muted);max-width:780px}
 .badge{border:1px solid var(--border);background:var(--surface);border-radius:999px;padding:7px 11px;color:var(--muted);font-size:12px;white-space:nowrap}
 .grid{display:grid;grid-template-columns:360px 1fr;gap:18px}
@@ -49,7 +48,9 @@ input,select{width:100%;background:var(--surface2);border:1px solid var(--border
 input:focus,select:focus{border-color:var(--accent)}
 button{border:1px solid var(--border);background:var(--surface2);color:var(--text);padding:9px 12px;border-radius:10px;cursor:pointer}
 button:hover{border-color:var(--accent)}
-button.primary{background:var(--accent);border-color:var(--accent);color:#061018;font-weight:750}
+button.primary{background:var(--accent);border-color:var(--accent);color:#1a1200;font-weight:750}
+@media (prefers-color-scheme: light){button.primary{color:#fff}}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 button.ghost{background:transparent}
 button.danger{color:var(--danger)}
 .quick{display:flex;flex-wrap:wrap;gap:7px}
@@ -89,7 +90,7 @@ tbody tr:hover{background:var(--surface2)}
 .pills{display:flex;flex-wrap:wrap;gap:6px}
 .pill{padding:5px 7px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);font-size:11px}
 .section{margin-top:16px}
-.sectionTitle{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+.sectionTitle{font-size:13px;font-weight:650;color:var(--muted);margin:4px 0 10px}
 .npcGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
 .npc{border:1px solid var(--border);border-radius:12px;padding:12px;background:var(--surface3)}
 .npcTop{display:flex;justify-content:space-between;gap:12px}
@@ -134,8 +135,9 @@ tbody tr:hover{background:var(--surface2)}
 .boostBar{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 16px}
 .boostCard{display:flex;align-items:center;gap:10px;flex:1 1 260px;min-width:0;padding:9px 12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--text);text-align:left}
 .boostCard img{width:40px;height:40px;object-fit:contain;image-rendering:pixelated;flex:none}
-.boostCard .bk{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
-.boostCard .bn{font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.boostCard .bk{font-size:12px;color:var(--muted)}
+.boostCard .bn{font-size:15px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.boostCard:not(.off){border-left:3px solid var(--accent)}
 .boostCard.off{opacity:.6}
 .modeTabs{display:flex;gap:6px;margin:0 0 16px;padding:4px;background:var(--surface);border:1px solid var(--border);border-radius:12px;width:max-content}
 .modeTab{padding:9px 13px;border-radius:9px;border:1px solid transparent;background:transparent;color:var(--muted);font-weight:650}
@@ -163,7 +165,7 @@ tbody tr:hover{background:var(--surface2)}
 .partyTableWrap{overflow:auto;border:1px solid var(--border);border-radius:12px}.partyTable{width:100%;min-width:720px;border-collapse:collapse}.partyTable th,.partyTable td{padding:9px 10px;border-bottom:1px solid var(--border);white-space:nowrap}.partyTable th{font-size:10px;text-transform:uppercase;color:var(--muted);background:var(--surface2);text-align:left}.partyTable .pos{color:var(--accent2)}.partyTable .neg{color:var(--danger)}
 .transferList{display:grid;gap:7px;margin-top:12px}.transfer{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface3)}.transfer code{font:12px ui-monospace,SFMono-Regular,Consolas,monospace}.copyBtn{font-size:11px;padding:6px 8px}
 .modernEmpty{padding:36px 18px;text-align:center;color:var(--muted)}
-@media(max-width:700px){.partySummary{grid-template-columns:1fr}.lootFilters input{width:100%;min-width:180px}.modeTabs{width:100%}.modeTab{flex:1}}
+@media(max-width:700px){.partySummary{grid-template-columns:1fr}.lootFilters input{width:100%;min-width:180px}.modeTabs{width:100%;display:grid;grid-template-columns:1fr 1fr}.modeTab{padding:9px 8px}}
 .priceSearchRow{display:grid;grid-template-columns:minmax(0,1fr) 220px auto;gap:8px;align-items:start}.priceSearchRow .searchWrap{min-width:0}.priceResult{margin-top:16px}.priceHero{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}.priceBox{padding:15px;border:1px solid var(--border);border-radius:12px;background:var(--surface3)}.priceBox .label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}.priceBox .value{font-size:22px;font-weight:850;margin-top:3px}.priceCompare{padding:13px 15px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);margin-bottom:12px}.sellerList{display:grid;gap:7px}.sellerRow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 11px;border:1px solid var(--border);border-radius:10px;background:var(--surface3)}.sellerRow a{color:var(--text);text-decoration:none}.sellerRow a:hover{text-decoration:underline}.sellerCity{font-size:11px;color:var(--muted);margin-left:7px}.imbueMain{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.imbueGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.imbueOtherTitle{margin-top:22px}.imbueCard{border:1px solid var(--border);border-radius:14px;background:var(--surface3);overflow:hidden}.imbueCard>summary{display:flex;align-items:center;gap:11px;padding:14px;cursor:pointer;list-style:none}.imbueCard>summary::-webkit-details-marker{display:none}.imbueCard>summary b{display:block;font-size:15px}.imbueCard>summary small{display:block;color:var(--muted);font-size:11px;margin-top:2px}.imbueIcon{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:var(--surface2);border:1px solid var(--border);font-size:21px;flex:none}.imbueArrow{margin-left:auto;font-size:20px;color:var(--muted);transition:transform .15s}.imbueCard[open]>summary .imbueArrow{transform:rotate(90deg)}.imbueLevels{padding:0 10px 10px}.imbueLevel{border-top:1px solid var(--border)}.imbueLevel summary{padding:9px 4px;color:var(--accent);font-size:12px;cursor:pointer;list-style:none}.imbueLevel summary::-webkit-details-marker{display:none}.imbueItems{display:grid;gap:5px;padding:0 4px 8px}.imbueItem{display:flex;align-items:center;gap:8px;padding:7px 8px;border:1px solid var(--border);border-radius:8px;color:var(--text);text-decoration:none;background:var(--surface2);font-size:11px}.imbueItem:hover{border-color:var(--accent)}.imbueQty{font-weight:800;color:var(--accent2);min-width:30px}.imbueMain .imbueCard{border-color:color-mix(in srgb,var(--accent) 45%,var(--border))}.priceSuggestions{position:fixed}
 #appPrice .suggestions{max-height:520px;max-width:min(760px,calc(100vw - 44px));overflow:auto}
 .itemPriceTitle{display:flex;align-items:center;gap:9px;margin:10px 0 12px;font-size:14px}
@@ -198,7 +200,7 @@ tbody tr:hover{background:var(--surface2)}
       LOCAL.meta=meta||{};LOCAL.boosted=cat.boosted||'';LOCAL.ok=true;
       rebuildCreatureCatalog();
       diag['dane lokalne (data/)']={ok:true,err:''};renderDiag();
-      setStatus('Dane lokalne • '+creatureCatalog.length+' mobów'+(localStamp()?' • '+localStamp():''),'ok');
+      setStatus('Baza: '+creatureCatalog.length+' mobów'+(localStamp()?' • stan z '+localStamp():''),'ok');
       if(document.activeElement?.id==='mobSearch')showCreatureSuggestions(document.getElementById('mobSearch').value);
       setTimeout(()=>{loadLocalLoot().catch(()=>{});loadLocalItems()},250);
       return true;
@@ -254,7 +256,7 @@ tbody tr:hover{background:var(--surface2)}
   const slot=()=>new Promise(r=>{if(active<4){active++;r()}else waiting.push(r)});
   const release=()=>{const n=waiting.shift();if(n)n();else active--};
   function note(url,ok,err){try{diag[new URL(url).host]={ok,err:ok?'':String(err?.message||err)};renderDiag()}catch{}}
-  function renderDiag(){const el=document.getElementById('diag');if(!el)return;el.innerHTML='<summary>Diagnostyka API</summary>'+Object.entries(diag).map(([h,v])=>'<div class="mini">'+(v.ok?'🟢 ':'🔴 ')+esc(h)+(v.ok?'':' — '+esc(v.err))+'</div>').join('')}
+  function renderDiag(){const el=document.getElementById('diag');if(!el)return;el.innerHTML='<summary>Status źródeł danych</summary>'+Object.entries(diag).map(([h,v])=>'<div class="mini">'+(v.ok?'🟢 ':'🔴 ')+esc(h)+(v.ok?'':' — '+esc(v.err))+'</div>').join('')}
   async function apiJson(url,timeout=12000,tries=2){await slot();try{let last;for(let i=0;i<tries;i++){const ctrl=new AbortController(),t=setTimeout(()=>ctrl.abort(),timeout);try{const r=await fetch(url,{headers:{Accept:'application/json'},signal:ctrl.signal});if(r.status===429||r.status>=500){last=new Error('HTTP '+r.status);await new Promise(s=>setTimeout(s,700*(i+1)));continue}if(!r.ok)throw new Error('HTTP '+r.status);const j=await r.json();note(url,true);return j}catch(e){last=e;if(/^HTTP 4/.test(e.message||''))break}finally{clearTimeout(t)}}note(url,false,last);throw last||new Error('network')}finally{release()}}
   async function loadCreatureCatalog(){
     if(await loadLocalCatalog())return true;
@@ -369,7 +371,7 @@ async function canonItem(name){const n=String(name).trim(),hit=[...itemCatalog,.
   function drawParty(r){const e=document.getElementById('partyResult');if(!r){e.innerHTML='<div class="modernEmpty">Nie znaleziono pełnych danych Party Hunt.</div>';return}const groups={};r.tr.forEach(t=>(groups[t.from]??=[]).push(t));const html=r.tr.length?Object.keys(groups).map(from=>'<div class="transferGroup"><div class="transferFrom">'+esc(from)+' <span>płaci:</span></div>'+groups[from].map(t=>'<div class="transfer"><code>transfer '+t.a+' to '+esc(t.to)+'</code><button class="copyBtn" data-copy="'+esc('transfer '+t.a+' to '+t.to)+'">Kopiuj</button></div>').join('')+'</div>').join(''):'<div class="status ok">Brak przelewów — już wyrównane.</div>';e.innerHTML='<div class="partySummary"><div class="partyStat"><div class="n">'+r.members.length+'</div><div class="l">graczy</div></div><div class="partyStat"><div class="n">'+nf.format(r.tot.loot)+' gp</div><div class="l">łączny loot</div></div><div class="partyStat"><div class="n">'+nf.format(r.tot.balance)+' gp</div><div class="l">party balance</div></div></div>'+(r.consistent?'':'<div class="status warn">Uwaga: suma danych graczy nie zgadza się z podsumowaniem sesji.</div>')+'<div class="partyTableWrap"><table class="partyTable"><thead><tr><th>Gracz</th><th>Loot</th><th>Supplies</th><th>Balance</th><th>Powinien mieć</th><th>Wyrównanie</th></tr></thead><tbody>'+r.members.map(m=>'<tr><td>'+esc(m.name)+'</td><td>'+nf.format(m.loot)+'</td><td>'+nf.format(m.supplies)+'</td><td class="'+(m.balance<0?'neg':'pos')+'">'+nf.format(m.balance)+'</td><td>'+nf.format(m.target)+'</td><td class="'+(m.delta<0?'neg':'pos')+'">'+(m.delta<0?'płaci ':'otrzymuje ')+nf.format(Math.abs(m.delta))+'</td></tr>').join('')+'</tbody></table></div><div class="transferList">'+html+'</div>'+(r.tr.length?'<div class="partyActions"><button class="primary" id="copyAllParty">Kopiuj wszystkie komendy</button></div>':'');e.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',()=>navigator.clipboard?.writeText(b.dataset.copy)));const all=r.tr.map(t=>'transfer '+t.a+' to '+t.to).join('\n');document.getElementById('copyAllParty')?.addEventListener('click',()=>navigator.clipboard?.writeText(all))}
   loadCache();rebuildCreatureCatalog();
   const wrap=document.querySelector('.wrap');
-  wrap.innerHTML=`<div class="header"><div><div class="kicker">Tibia • loot intelligence</div><h1>Tibia Loot Info</h1><div class="sub">Wybierz potwory, sprawdź ich loot, ceny NPC i wszystkie miejsca sprzedaży.</div></div><div class="badge" id="appStatus">Ładuję bazę…</div></div><div class="boostBar" id="boostBar"><button type="button" class="boostCard off" id="boostCreature" disabled><div><div class="bk">Boosted creature</div><div class="bn">ładuję…</div></div></button><div class="boostCard off" id="boostBoss"><div><div class="bk">Boosted boss</div><div class="bn">ładuję…</div></div></div></div><div class="modeTabs"><button class="modeTab active" data-mode="loot">Sprawdź loota</button><button class="modeTab" data-mode="price">Price Check</button><button class="modeTab" data-mode="imbues">Imbuements</button><button class="modeTab" data-mode="party">Party Loot Split</button></div><div id="appLoot"><div class="grid"><aside class="card"><div class="cardHead"><h2>Potwory</h2><button class="ghost" id="clearMobs">Wyczyść</button></div><div class="cardBody"><label for="mobSearch">Dodaj potwora</label><div class="searchWrap"><input id="mobSearch" autocomplete="off" placeholder="Wpisz np. Gazer, Arachno albo Draken"><div id="mobSuggestions" class="suggestions"></div></div><div class="subtleLine">Dane ładują się z plików obok strony; gdy ich brak, strona korzysta z API na żywo.</div><div id="selectedMobs" class="modernMobChips"></div></div></aside><main><div class="card"><div class="cardHead"><div><h2>Loot</h2><div id="resultMeta" class="subtleLine">0 mobów • 0 unikalnych itemów</div></div></div><div class="cardBody"><div class="lootToolbar"><div class="tabs"><button class="tab active" data-tab="loot">Loot</button><button class="tab" data-tab="npc">NPC</button><button class="tab" data-tab="mobs">Moby</button></div><div class="lootFilters"><select id="lootSort"><option value="priceDesc">Cena: najwyżej</option><option value="priceAsc">Cena: najniżej</option><option value="nameAsc">Nazwa A–Z</option><option value="nameDesc">Nazwa Z–A</option></select><select id="npcMode"><option value="compact">NPC: zwięźle</option><option value="all">NPC: wszyscy</option></select><select id="lootCity"><option value="">Wszystkie miasta</option><option>Ab'Dendriel</option><option>Ankrahmun</option><option>Bounac</option><option>Carlin</option><option>Darashia</option><option>Edron</option><option>Feyrist</option><option>Issavi</option><option>Kazordoon</option><option>Liberty Bay</option><option>Moonfall</option><option>Port Hope</option><option>Rathleton</option><option>Roshamuul</option><option>Svargrond</option><option>Thais</option><option>Venore</option><option>Yalahar</option></select><input id="lootFilter" placeholder="Filtruj item / NPC…"></div></div><section id="lootView"></section><section id="npcView" style="display:none"></section><section id="mobsView" style="display:none"></section></div></div></main></div></div><section id="appPrice" class="partyWrap" style="display:none"><div class="card"><div class="cardHead"><div><h2>Price Check</h2><div class="subtleLine">Porównaj cenę NPC z własną ceną marketową.</div></div></div><div class="cardBody"><div class="priceSearchRow"><div class="searchWrap"><input id="itemSearch" autocomplete="off" placeholder="Wpisz item… np. Prismatic Quartz"><div id="itemSuggestions" class="suggestions"></div></div><input id="marketPrice" inputmode="numeric" placeholder="Cena marketu (gp)"><button class="primary" id="checkPrice">Sprawdź</button></div><div id="priceResult" class="priceResult"></div></div></div></section><section id="appImbues" class="partyWrap" style="display:none"><div class="card"><div class="cardHead"><div><h2>Imbuements</h2><div class="subtleLine">Najczęściej używane są na górze. Kliknij kafelek.</div></div></div><div class="cardBody"><div id="imbueMain" class="imbueMain"></div><div class="sectionTitle imbueOtherTitle">Pozostałe imbuements</div><div id="imbueOther" class="imbueGrid"></div></div></div></section><section id="appParty" class="partyWrap" style="display:none"><div class="card"><div class="cardHead"><div><h2>Party Loot Split</h2><div class="subtleLine">Wklej Party Hunt Analyzer i dostaniesz gotowe przelewy.</div></div></div><div class="cardBody"><textarea id="partyInput" class="partyInput" spellcheck="false" placeholder="Wklej tutaj log Party Hunt…"></textarea><div class="partyActions"><button class="ghost" id="partyClear">Wyczyść</button><button class="primary" id="partyCalc">Split Loot</button></div><div id="partyResult" class="partyResult"></div></div></div></section><details id="diag" class="subtleLine"><summary>Diagnostyka API</summary></details><div class="footer">Źródła: TibiaData API v4 (moby, loot) + TibiaWiki/Fandom (loot uzupełniający, NPC, ceny, grafiki; treści wiki: CC BY-SA). Dane są generowane cyklicznie; gdy pliku brakuje, strona pyta API na żywo i cache'uje wynik w przeglądarce. Tibia i grafiki © CipSoft GmbH. Strona nieoficjalna.</div>`;
+  wrap.innerHTML=`<div class="header"><div><h1>Loot i ceny NPC do Tibii</h1><div class="sub">Dodaj potwory z hunta i zobacz, co z nich wypada, ile za to zapłacą NPC i u kogo sprzedasz najdrożej.</div></div><div class="badge" id="appStatus">Ładuję bazę…</div></div><div class="boostBar" id="boostBar"><button type="button" class="boostCard off" id="boostCreature" disabled><div><div class="bk">Boosted creature dziś</div><div class="bn">ładuję…</div></div></button><div class="boostCard off" id="boostBoss"><div><div class="bk">Boosted boss dziś</div><div class="bn">ładuję…</div></div></div></div><div class="modeTabs"><button class="modeTab active" data-mode="loot">Loot z mobów</button><button class="modeTab" data-mode="price">Sprawdź cenę</button><button class="modeTab" data-mode="imbues">Imbuementy</button><button class="modeTab" data-mode="party">Podział lootu</button></div><div id="appLoot"><div class="grid"><aside class="card"><div class="cardHead"><h2>Potwory</h2><button class="ghost" id="clearMobs">Wyczyść</button></div><div class="cardBody"><label for="mobSearch">Dodaj potwora</label><div class="searchWrap"><input id="mobSearch" autocomplete="off" placeholder="Np. Gazer, Draken, Hydra"><div id="mobSuggestions" class="suggestions"></div></div><div class="subtleLine">Baza jest odświeżana co tydzień. Gdy czegoś w niej brakuje, strona dopyta API na żywo.</div><div id="selectedMobs" class="modernMobChips"></div></div></aside><main><div class="card"><div class="cardHead"><div><h2>Loot</h2><div id="resultMeta" class="subtleLine">0 mobów • 0 unikalnych itemów</div></div></div><div class="cardBody"><div class="lootToolbar"><div class="tabs"><button class="tab active" data-tab="loot">Loot</button><button class="tab" data-tab="npc">NPC</button><button class="tab" data-tab="mobs">Moby</button></div><div class="lootFilters"><select id="lootSort"><option value="priceDesc">Najdroższe najpierw</option><option value="priceAsc">Najtańsze najpierw</option><option value="nameAsc">Nazwa A–Z</option><option value="nameDesc">Nazwa Z–A</option></select><select id="npcMode"><option value="compact">NPC: skrócona lista</option><option value="all">NPC: pełna lista</option></select><select id="lootCity"><option value="">Wszystkie miasta</option><option>Ab'Dendriel</option><option>Ankrahmun</option><option>Bounac</option><option>Carlin</option><option>Darashia</option><option>Edron</option><option>Feyrist</option><option>Issavi</option><option>Kazordoon</option><option>Liberty Bay</option><option>Moonfall</option><option>Port Hope</option><option>Rathleton</option><option>Roshamuul</option><option>Svargrond</option><option>Thais</option><option>Venore</option><option>Yalahar</option></select><input id="lootFilter" placeholder="Szukaj itemu lub NPC…"></div></div><section id="lootView"></section><section id="npcView" style="display:none"></section><section id="mobsView" style="display:none"></section></div></div></main></div></div><section id="appPrice" class="partyWrap" style="display:none"><div class="card"><div class="cardHead"><div><h2>Price Check</h2><div class="subtleLine">Sprawdź, czy item lepiej sprzedać na marketcie, czy oddać NPC.</div></div></div><div class="cardBody"><div class="priceSearchRow"><div class="searchWrap"><input id="itemSearch" autocomplete="off" placeholder="Nazwa itemu, np. Prismatic Quartz"><div id="itemSuggestions" class="suggestions"></div></div><input id="marketPrice" inputmode="numeric" placeholder="Cena marketu (gp)"><button class="primary" id="checkPrice">Sprawdź</button></div><div id="priceResult" class="priceResult"></div></div></div></section><section id="appImbues" class="partyWrap" style="display:none"><div class="card"><div class="cardHead"><div><h2>Imbuements</h2><div class="subtleLine">Najpopularniejsze są na górze. Rozwiń kartę, aby zobaczyć szczegóły.</div></div></div><div class="cardBody"><div id="imbueMain" class="imbueMain"></div><div class="sectionTitle imbueOtherTitle">Pozostałe imbuementy</div><div id="imbueOther" class="imbueGrid"></div></div></div></section><section id="appParty" class="partyWrap" style="display:none"><div class="card"><div class="cardHead"><div><h2>Party Loot Split</h2><div class="subtleLine">Wklej log z Party Hunt Analyzera, a dostaniesz gotową listę przelewów.</div></div></div><div class="cardBody"><textarea id="partyInput" class="partyInput" spellcheck="false" placeholder="Wklej tutaj cały log z Party Hunt Analyzera…"></textarea><div class="partyActions"><button class="ghost" id="partyClear">Wyczyść</button><button class="primary" id="partyCalc">Podziel loot</button></div><div id="partyResult" class="partyResult"></div></div></div></section><details id="diag" class="subtleLine"><summary>Status źródeł danych</summary></details><div class="footer">Źródła danych: TibiaData API v4 (moby, loot) oraz TibiaWiki na Fandomie (dodatkowy loot, NPC, ceny, grafiki; treści wiki na licencji CC BY-SA). Baza jest odświeżana co tydzień, a boosted creature i boss pobierają się na żywo. Tibia i grafiki © CipSoft GmbH. To nieoficjalna strona fanowska, niezwiązana z CipSoft.</div>`;
   const mobSearch=document.getElementById('mobSearch'),mobSuggestions=document.getElementById('mobSuggestions');
   const itemSearch=document.getElementById('itemSearch'),itemSuggestions=document.getElementById('itemSuggestions');
   mobSearch.addEventListener('input',()=>showCreatureSuggestions(mobSearch.value));
@@ -394,21 +396,21 @@ async function canonItem(name){const n=String(name).trim(),hit=[...itemCatalog,.
   async function loadBoosted(){
     const cEl=document.getElementById('boostCreature'),bEl=document.getElementById('boostBoss');
     if(!cEl||!bEl)return;
-    const card=(el,kind,name,img)=>{el.classList.toggle('off',!name);el.innerHTML=(img?'<img alt="" src="'+esc(img)+'" onerror="this.remove()">':'')+'<div style="min-width:0"><div class="bk">'+kind+'</div><div class="bn">'+esc(name||'niedostępne')+'</div></div>'};
+    const card=(el,kind,name,img)=>{el.classList.toggle('off',!name);el.innerHTML=(img?'<img alt="" src="'+esc(img)+'" onerror="this.remove()">':'')+'<div style="min-width:0"><div class="bk">'+kind+'</div><div class="bn">'+esc(name||'brak danych')+'</div></div>'};
     try{
       const d=await apiJson(API+'/creatures',15000);const b=d?.creatures?.boosted;
-      if(b?.name){const nm=singularize(String(b.name).trim(),String(b.race||'').trim())||String(b.name).trim();card(cEl,'Boosted creature',nm,validImg(b.image_url)?b.image_url:'');cEl.disabled=false;cEl.title='Kliknij, aby dodać do listy';cEl.onclick=()=>{addMob(nm)}}
+      if(b?.name){const nm=singularize(String(b.name).trim(),String(b.race||'').trim())||String(b.name).trim();card(cEl,'Boosted creature dziś',nm,validImg(b.image_url)?b.image_url:'');cEl.disabled=false;cEl.title='Kliknij, aby dodać do listy mobów';cEl.onclick=()=>{addMob(nm)}}
       else throw new Error('brak pola boosted');
     }catch{
       const race=LOCAL.boosted;let nm='';if(race){for(const [n,r] of LOCAL.races){if(r===race){nm=n;break}}}
-      card(cEl,'Boosted creature',nm?nm+' (z danych lokalnych)':'',nm?(creatureMeta.get(nm)?.imageUrl||''):'');
+      card(cEl,'Boosted creature dziś',nm?nm+' (z danych lokalnych)':'',nm?(creatureMeta.get(nm)?.imageUrl||''):'');
       if(nm){cEl.disabled=false;cEl.onclick=()=>addMob(nm)}
     }
     try{
       const d=await apiJson(API+'/boostablebosses',15000);const b=d?.boostable_bosses?.boosted||d?.boostable_bosses?.boosted_boss;
-      if(b?.name)card(bEl,'Boosted boss',String(b.name).trim(),validImg(b.image_url)?b.image_url:'');
+      if(b?.name)card(bEl,'Boosted boss dziś',String(b.name).trim(),validImg(b.image_url)?b.image_url:'');
       else throw new Error('brak pola boosted');
-    }catch{card(bEl,'Boosted boss','','')}
+    }catch{card(bEl,'Boosted boss dziś','','')}
   }
   setTimeout(loadBoosted,0);
   loadCreatureCatalog().then(ok=>{if(!ok)setStatus('TibiaData v4 niedostępne • używam bazy lokalnej','warn')});
