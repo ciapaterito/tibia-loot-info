@@ -170,7 +170,7 @@ tbody tr:hover{background:var(--surface2)}
 #appPrice .suggestions{max-height:520px;max-width:min(760px,calc(100vw - 44px));overflow:auto}
 .itemPriceTitle{display:flex;align-items:center;gap:9px;margin:10px 0 12px;font-size:14px}
 @media(max-width:850px){.priceSearchRow{grid-template-columns:1fr}.priceHero{grid-template-columns:1fr}.imbueMain,.imbueGrid{grid-template-columns:1fr}}
-.mkt{opacity:.8;font-size:.85em;white-space:nowrap}.mkt b{display:inline-block;width:1.25em;height:1.25em;line-height:1.2em;text-align:center;border:1px solid currentColor;border-radius:50%;font-size:.8em;cursor:help}.mkt.old{color:#d9a441;opacity:1}</style>
+</style>
 </head>
 <body>
 <div id="app">
@@ -365,25 +365,6 @@ async function canonItem(name){const n=String(name).trim(),hit=[...itemCatalog,.
     Epiphany:{sub:'Magic Level',icon:'✧',levels:{Basic:[['Elven Astral Observer',25]],Intricate:[['Elven Astral Observer',25],['Broken Shamanic Staff',15]],Powerful:[['Elven Astral Observer',25],['Broken Shamanic Staff',15],['Mystical Hourglasses',5]]}}
   };
   function imbueCard(name,d){return'<details class="imbueCard"'+(d.main?' open':'')+'><summary><span class="imbueIcon">'+d.icon+'</span><span><b>'+esc(name)+'</b><small>'+esc(d.sub)+'</small></span><span class="imbueArrow">›</span></summary><div class="imbueLevels">'+Object.entries(d.levels).map(([l,items])=>'<details class="imbueLevel"><summary>'+l+'</summary><div class="imbueItems">'+items.map(x=>'<a class="imbueItem" href="'+wiki(x[0])+'" target="_blank" rel="noopener noreferrer"><span class="imbueQty">'+x[1]+'×</span><span>'+esc(x[0])+'</span></a>').join('')+'</div></details>').join('')+'</div></details>'}
-  // ---- Ceny z marketu (tibiamarket.top, świat Karmeya). API: 1 zapytanie / 5 s, więc zapytania idą kolejką; wyniki w localStorage.
-  const MKT_API='https://api.tibiamarket.top',MKT_WORLD='Karmeya',MKT_GAP=5200,MKT={upd:null,ids:null,v:new Map(),err:''};
-  const mktLs={get:k=>{try{return JSON.parse(localStorage.getItem(k)||'null')}catch{return null}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
-  let mktChain=Promise.resolve();
-  function mktGet(path){const p=mktChain.then(async()=>{const r=await fetch(MKT_API+path);if(!r.ok)throw new Error('HTTP '+r.status);return r.json()});mktChain=p.catch(()=>{}).then(()=>new Promise(r=>setTimeout(r,MKT_GAP)));return p}
-  async function mktEnsure(names){
-    try{MKT.err='';
-      if(!MKT.upd){const w=await mktGet('/world_data?servers='+MKT_WORLD);MKT.upd=w?.[0]?.last_update||null}
-      if(!MKT.ids){let c=mktLs.get('mktIds');if(!c||Date.now()-c.ts>6048e5){const m=await mktGet('/item_metadata'),o={};for(const x of m){if(x.name)o[x.name.toLowerCase()]=x.id;if(x.wiki_name)o[x.wiki_name.toLowerCase()]=x.id}c={ts:Date.now(),o};mktLs.set('mktIds',c)}MKT.ids=c.o}
-      const cv=mktLs.get('mktVals');if(cv&&cv.upd===MKT.upd&&Date.now()-cv.ts<432e5&&!MKT.v.size)for(const k in cv.v)MKT.v.set(+k,cv.v[k]);
-      const ids=[...new Set(names.map(n=>MKT.ids[String(n).toLowerCase()]).filter(id=>id!=null&&!MKT.v.has(id)))];
-      for(let i=0;i<ids.length;i+=150){const a=await mktGet('/market_values?server='+MKT_WORLD+'&limit=1000&item_ids='+ids.slice(i,i+150).join(','));for(const v of a)MKT.v.set(v.id,{buy_offer:v.buy_offer,sell_offer:v.sell_offer,month_average_sell:v.month_average_sell,month_average_buy:v.month_average_buy})}
-      if(ids.length)mktLs.set('mktVals',{ts:Date.now(),upd:MKT.upd,v:Object.fromEntries(MKT.v)});
-    }catch(e){MKT.err=String(e&&e.message||e)}}
-  const mktVal=n=>MKT.ids?MKT.v.get(MKT.ids[String(n).toLowerCase()]):undefined;
-  function mktAge(){if(!MKT.upd)return{txt:'brak daty',days:null};const d=new Date(MKT.upd+'Z'),days=Math.floor((Date.now()-d)/864e5);return{txt:d.toLocaleDateString('pl-PL')+' ('+(days<=0?'dziś':days+' dni temu')+')',days}}
-  const mktNote=()=>'tibiamarket.top • '+MKT_WORLD+' • dane z '+mktAge().txt;
-  function mktBadge(name,kind){const v=mktVal(name);if(!v)return'';const p=kind==='sell'?(v.buy_offer>0?v.buy_offer:v.month_average_buy):(v.sell_offer>0?v.sell_offer:v.month_average_sell);if(!(p>0))return'';
-    const a=mktAge();return' <span class="mkt'+(a.days>7?' old':'')+'" title="Market '+MKT_WORLD+' wg tibiamarket.top. Ostatnia aktualizacja danych: '+a.txt+'. Ceny mogą być nieaktualne.">(market: '+nf.format(p)+' gp <b>?</b>)</span>'}
   // ---- Kalkulator imbuementów: market vs gold tokeny (Yana: 2 tokeny = 1. część, 4 = 1.+2., 6 = wszystkie 3; tylko Void/Vampirism/Strike)
   const IMB_FEE={Basic:7500,Intricate:60000,Powerful:250000},IMB_TOK=['Void','Vampirism','Strike'];
   const imbLoad=()=>{try{return JSON.parse(localStorage.getItem('imbPrices')||'{}')}catch{return{}}};
@@ -391,7 +372,7 @@ async function canonItem(name){const n=String(name).trim(),hit=[...itemCatalog,.
   const imbNum=v=>{const m=String(v||'').toLowerCase().replace(/[\s,]/g,'').match(/^([\d.]+)(k*)$/);return m?Math.round((parseFloat(m[1])||0)*Math.pow(1000,m[2].length)):0};
   function renderImbueCalc(){
     const box=document.getElementById('imbueCalc');if(!box)return;const P=imbLoad(),$=id=>document.getElementById(id);
-    box.innerHTML='<div class="sectionTitle">Kalkulator kosztów: market czy gold tokeny</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px"><select id="icName">'+Object.keys(IMBUES).map(n=>'<option value="'+n+'">'+n+' ('+esc(IMBUES[n].sub)+')</option>').join('')+'</select><select id="icTier"><option>Basic</option><option>Intricate</option><option selected>Powerful</option></select><input id="icQty" inputmode="numeric" value="1" title="Ile itemów imbuujesz" placeholder="Liczba itemów"></div><div id="icPrices" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-top:8px"></div><div style="margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="ghost" id="icMkt">Wstaw ceny z marketu (Karmeya)</button><span id="icMktNote" class="subtleLine"></span></div><div id="icOut" style="margin-top:12px"></div>';
+    box.innerHTML='<div class="sectionTitle">Kalkulator kosztów: market czy gold tokeny</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px"><select id="icName">'+Object.keys(IMBUES).map(n=>'<option value="'+n+'">'+n+' ('+esc(IMBUES[n].sub)+')</option>').join('')+'</select><select id="icTier"><option>Basic</option><option>Intricate</option><option selected>Powerful</option></select><input id="icQty" inputmode="numeric" value="1" title="Ile itemów imbuujesz" placeholder="Liczba itemów"></div><div id="icPrices" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-top:8px"></div><div id="icOut" style="margin-top:12px"></div>';
     const cur=()=>({n:$('icName').value,t:$('icTier').value,q:Math.max(1,parseInt($('icQty').value)||1)});
     function out(){
       const {n,t,q}=cur(),it=IMBUES[n].levels[t],fee=IMB_FEE[t],tok=IMB_TOK.includes(n),tp=imbNum(P.__token),cost=i=>it[i][1]*imbNum(P[it[i][0]]);
@@ -407,8 +388,7 @@ async function canonItem(name){const n=String(name).trim(),hit=[...itemCatalog,.
       $('icPrices').innerHTML=(tok?'<div><label>Cena gold tokena</label><input data-k="__token" inputmode="decimal" placeholder="np. 40k" value="'+esc(P.__token||'')+'"></div>':'')+it.map(x=>'<div><label>'+esc(x[0])+' ('+x[1]+'×) — cena sztuki</label><input data-k="'+esc(x[0])+'" inputmode="decimal" placeholder="np. 600 lub 1.5k" value="'+esc(P[x[0]]||'')+'"></div>').join('');
       $('icPrices').querySelectorAll('input').forEach(i=>i.addEventListener('input',()=>{P[i.dataset.k]=i.value;imbSave(P);out()}));
     }
-    ['icName','icTier'].forEach(id=>$(id).addEventListener('change',()=>{prices();out()}));$('icMkt').addEventListener('click',async()=>{const b=$('icMkt'),nt=$('icMktNote');b.disabled=true;nt.textContent='Pobieram ceny (limit API: 1 zapytanie / 5 s, chwilę potrwa)…';const {n,t}=cur(),names=IMBUES[n].levels[t].map(x=>x[0]);if(IMB_TOK.includes(n))names.push('Gold Token');await mktEnsure(names);let got=0;for(const nm of names){const v=mktVal(nm),p=v&&(v.sell_offer>0?v.sell_offer:v.month_average_sell>0?v.month_average_sell:0);if(p>0){P[nm==='Gold Token'?'__token':nm]=String(p);got++}}imbSave(P);prices();out();nt.innerHTML=got?esc(mktNote())+' <span class="mkt'+(mktAge().days>7?' old':'')+'"><b>?</b></span> — wstawiono '+got+' cen (cena kupna: najniższa oferta sprzedaży)':'Nie udało się pobrać cen ('+esc(MKT.err||'brak tych itemów w danych')+'). Wpisz ręcznie.';b.disabled=false});
-    $('icQty').addEventListener('input',out);prices();out();
+    ['icName','icTier'].forEach(id=>$(id).addEventListener('change',()=>{prices();out()}));$('icQty').addEventListener('input',out);prices();out();
   }
   function renderImbues(){renderImbueCalc();const e=Object.entries(IMBUES);document.getElementById('imbueMain').innerHTML=e.filter(x=>x[1].main).map(x=>imbueCard(x[0],x[1])).join('');document.getElementById('imbueOther').innerHTML=e.filter(x=>!x[1].main).map(x=>imbueCard(x[0],x[1])).join('')}
   function partyNum(s){const n=Number(String(s||'').replace(/[^\d-]/g,''));return Number.isFinite(n)?n:null}
@@ -470,7 +450,7 @@ async function canonItem(name){const n=String(name).trim(),hit=[...itemCatalog,.
     out.innerHTML='<div class="modernEmpty">Sprawdzam NPC dla '+names.length+' itemów…</div>';
     const res=[];let k=0;
     await Promise.all(Array.from({length:6},async()=>{while(k<names.length){const raw=names[k++];let c=await canonItem(raw);if(c===raw){const t=raw.replace(/^(an?|the)\s+/,'');if(t!==raw)c=await canonItem(t)}let d;try{d=await getItem(c)}catch{d={sellers:[]}}res.push({name:c,q:m.get(raw),d})}}));
-    SELL.rows=res;drawSell();mktEnsure(res.map(r=>r.name)).then(drawSell)}
+    SELL.rows=res;drawSell()}
   function drawSell(){
     const out=document.getElementById('sellResult');if(!SELL.rows.length)return;const city=document.getElementById('sellCity').value,G=new Map(),none=[];let total=0,cnt=0;
     for(const r of SELL.rows){const f=(r.d.sellers||[]).filter(s=>s.price!=null&&(!city||s.city===city));if(!f.length){none.push(r);continue}
@@ -478,9 +458,9 @@ async function canonItem(name){const n=String(name).trim(),hit=[...itemCatalog,.
       const g=G.get(key),v=b.price*r.q;g.sum+=v;g.rows.push({r,price:b.price,v});total+=v;cnt++}
     const groups=[...G.values()].sort((a,b)=>b.sum-a.sum),row='display:flex;justify-content:space-between;gap:10px;padding:3px 0';
     out.innerHTML='<div class="partySummary"><div class="partyStat"><div class="n">'+nf.format(total)+' gp</div><div class="l">łącznie u NPC</div></div><div class="partyStat"><div class="n">'+groups.length+'</div><div class="l">NPC do odwiedzenia</div></div><div class="partyStat"><div class="n">'+cnt+'</div><div class="l">itemów sprzedanych</div></div></div>'+
-      groups.map(g=>'<div class="transferGroup"><div class="transferFrom">'+esc(g.name)+(g.city?' ('+esc(g.city)+')':'')+' <span>— razem '+nf.format(g.sum)+' gp</span></div>'+g.rows.sort((a,b)=>b.v-a.v).map(x=>'<div style="'+row+'"><span>'+x.r.q+'× <a href="'+wiki(x.r.name)+'" target="_blank" rel="noopener noreferrer">'+esc(x.r.name)+'</a></span><span>'+nf.format(x.price)+' gp/szt • '+nf.format(x.v)+' gp'+mktBadge(x.r.name,'sell')+'</span></div>').join('')+'</div>').join('')+
+      groups.map(g=>'<div class="transferGroup"><div class="transferFrom">'+esc(g.name)+(g.city?' ('+esc(g.city)+')':'')+' <span>— razem '+nf.format(g.sum)+' gp</span></div>'+g.rows.sort((a,b)=>b.v-a.v).map(x=>'<div style="'+row+'"><span>'+x.r.q+'× <a href="'+wiki(x.r.name)+'" target="_blank" rel="noopener noreferrer">'+esc(x.r.name)+'</a></span><span>'+nf.format(x.price)+' gp/szt • '+nf.format(x.v)+' gp</span></div>').join('')+'</div>').join('')+
       (none.length?'<div class="status warn">Bez kupca'+(city?' w tym mieście':'')+' (market albo zostaw): '+none.map(r=>r.q+'× '+esc(r.name)).join(', ')+'</div>':'')+
-      '<div class="subtleLine" style="margin-top:8px">Dla każdego itemu wybrany jest NPC z najwyższą ceną. Coiny pominięte. Ceny z marketu mogą być wyższe.'+(MKT.upd?' Market: '+esc(mktNote())+'.':'')+'</div>'}
+      '<div class="subtleLine" style="margin-top:8px">Dla każdego itemu wybrany jest NPC z najwyższą ceną. Coiny pominięte. Ceny z marketu mogą być wyższe — sprawdź w zakładce „Sprawdź cenę”.</div>'}
   document.getElementById('sellCity').innerHTML=document.getElementById('lootCity').innerHTML;
   document.getElementById('sellCalc').addEventListener('click',sellCalc);
   document.getElementById('sellCity').addEventListener('change',drawSell);
