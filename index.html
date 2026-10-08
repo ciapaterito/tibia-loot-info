@@ -273,7 +273,7 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:none;border
   let creatureCatalog=[],cacheFresh=false;
   function rebuildCreatureCatalog(){const by=new Map(),sc=(n,k)=>(slugKey(n)===k?0:1000)+n.length,add=(n,r)=>{const k=r||slugKey(n),cur=by.get(k);if(!cur||sc(n,k)<sc(cur,k))by.set(k,n)};for(const[n,m]of creatureMeta)add(n,m.race);creatureCatalog=[...by.values()].sort((a,b)=>a.localeCompare(b))}
   let itemCatalog=[];
-  const junkItem=n=>{n=String(n||'').trim();return !n||(/^\d/.test(n)&&/\?$/.test(n))||/^[\d\s\-–?]+$/.test(n)||/&#?\w+;/.test(n)||/ Weapons$/i.test(n)};
+  const junkItem=n=>{n=String(n||'').trim();return !n||(/^\d/.test(n)&&/\?$/.test(n))||/^[\d\s\-–?]+$/.test(n)||/&#?\w+;/.test(n)||/ Weapons$/i.test(n)||/ and /i.test(n)};
   let _cs=null,_csN=-1;
   const creatureSet=()=>{if(_cs&&_csN===creatureMeta.size)return _cs;_cs=new Set();for(const[n,m]of creatureMeta){_cs.add(n.toLowerCase());if(m.plural)_cs.add(m.plural.toLowerCase())}_csN=creatureMeta.size;return _cs};
   const isCreatureName=n=>creatureSet().has(String(n).trim().toLowerCase())&&!LOCAL.items?.has(String(n).trim());
@@ -525,7 +525,7 @@ async function canonItem(name){const n=String(name).trim(),hit=[...itemCatalog,.
   renderRashid();setInterval(renderRashid,60000);
   setTimeout(loadBoosted,0);
   function updateMeta(){const m=document.getElementById('resultMeta');if(!m)return;let b=null;const rows=lootRows();for(const r of rows){const p=state.items.get(r.item)?.sellPrice;if(p!=null&&(!b||p>b.p))b={n:r.item,p}}m.textContent=state.mobs.length+' '+(state.mobs.length===1?'mob':'mobów')+' • '+rows.length+' unikalnych itemów'+(b?' • najdroższy: '+b.n+' ('+nf.format(b.p)+' gp)':'')}
-  const SKEY='tibiaLootInfoStateV1',RKEY='tibiaLootInfoRecentV1';let restored=false;
+  var SKEY='tibiaLootInfoStateV1',RKEY='tibiaLootInfoRecentV1',restored=false;
   function saveState(){if(!restored)return;try{localStorage.setItem(SKEY,JSON.stringify({mobs:state.mobs.map(m=>m.name),sort:state.sort,city:state.city,npcMode:state.npcMode}))}catch{}}
   function restoreState(){let x={};try{x=JSON.parse(localStorage.getItem(SKEY)||'{}')}catch{}restored=true;for(const[k,id]of[['sort','lootSort'],['city','lootCity'],['npcMode','npcMode']])if(x[k]){state[k]=x[k];const el=document.getElementById(id);if(el)el.value=x[k]}(x.mobs||[]).slice(0,30).forEach(n=>addMob(n));renderAll()}
   ['lootSort','npcMode','lootCity'].forEach(id=>document.getElementById(id).addEventListener('change',saveState));
