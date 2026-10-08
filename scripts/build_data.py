@@ -333,6 +333,16 @@ def merge_sellers(rows):
     return list(m.values())
 
 
+import html as _html
+
+
+def bad_loot_name(n):
+    """Odrzuca śmieci z wiki: zakresy ilości (\"1-24?\"), nagłówki kategorii (\"Axe Weapons\"), encje HTML."""
+    n = (n or "").strip()
+    return (not n or (n[0].isdigit() and n.endswith("?")) or re.fullmatch(r"[\d\s\-\u2013?]+", n) is not None
+            or re.search(r"&#?\w+;", n) is not None or n.lower().endswith(" weapons"))
+
+
 LOOT_RE = re.compile(r"\{\{\s*Loot Item\s*\|([^{}]*)\}\}", re.I)
 RARITY = re.compile(r"^(always|common|uncommon|semi-?rare|rare|very rare)$", re.I)
 NUMERIC = re.compile(r"^[\d\s.,+\-\u2013x*]+$")
@@ -344,8 +354,8 @@ def parse_wikitext_loot(wt):
         parts = [p.strip() for p in m.group(1).split("|") if p.strip()]
         item = next((p for p in parts if not NUMERIC.match(p) and not RARITY.match(p) and "=" not in p), None)
         if item:
-            item = item.replace("[[", "").replace("]]", "").strip()
-            if item:
+            item = _html.unescape(item.replace("[[", "").replace("]]", "")).strip()
+            if item and not bad_loot_name(item):
                 out.append(item)
     return out
 
@@ -721,6 +731,9 @@ def main():
         seen, lst = set(), []
         extra = list(prev_loot.get(race, [])) if race in wiki_failed_races else []
         for n in list(base) + list(wiki_loot.get(race, [])) + extra:
+            n = _html.unescape(n)
+            if bad_loot_name(n):
+                continue
             c = canonical(n)
             if c.lower() in seen:
                 continue
