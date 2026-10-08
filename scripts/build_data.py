@@ -340,7 +340,7 @@ def bad_loot_name(n):
     """Odrzuca śmieci z wiki: zakresy ilości (\"1-24?\"), nagłówki kategorii (\"Axe Weapons\"), encje HTML."""
     n = (n or "").strip()
     return (not n or (n[0].isdigit() and n.endswith("?")) or re.fullmatch(r"[\d\s\-\u2013?]+", n) is not None
-            or re.search(r"&#?\w+;", n) is not None or n.lower().endswith(" weapons"))
+            or re.search(r"&#?\w+;", n) is not None or n.lower().endswith(" weapons") or " and " in n.lower())
 
 
 LOOT_RE = re.compile(r"\{\{\s*Loot Item\s*\|([^{}]*)\}\}", re.I)
@@ -544,7 +544,8 @@ def fetch_tibiadata_loot(race):
             item = str(row.get("name") or row.get("item") or row.get("item_name") or row.get("itemName") or "").strip()
         else:
             item = ""
-        if not item or re.fullmatch(r"!?empty", item, re.I) or item.lower() in seen:
+        item = _html.unescape(item)
+        if not item or re.fullmatch(r"!?empty", item, re.I) or bad_loot_name(item) or item.lower() in seen:
             continue
         seen.add(item.lower())
         out.append(item)
