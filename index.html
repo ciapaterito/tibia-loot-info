@@ -545,9 +545,11 @@ async function canonItem(name){const n=String(name).trim(),hit=[...itemCatalog,.
   document.addEventListener('keydown',e=>{if(e.key==='/'&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName||'')){const pv=document.getElementById('appPrice').style.display==='block';e.preventDefault();(pv?itemSearch:mobSearch).focus()}});
 
   // ---- Stash ze screena: siatka slotów -> sprite'y itemów + odczyt liczb ----
-  const STASH={rows:[],libP:null,id:0},LKEY='tibiaLootInfoStashV1';let LEARN={};try{LEARN=JSON.parse(localStorage.getItem(LKEY)||'{}')}catch{}
-  const stashSig=px=>{let h=2166136261;for(let y=3;y<22;y++)for(let x=3;x<34;x++){const q=(y*36+x)*3;h=Math.imul(h^px[q],16777619);h=Math.imul(h^px[q+1],16777619);h=Math.imul(h^px[q+2],16777619)}return(h>>>0).toString(36)};
-  const stashLearn=r=>{if(!r.sig||!r.item)return;LEARN[r.sig]=r.item;const k=Object.keys(LEARN);if(k.length>3000)delete LEARN[k[0]];try{localStorage.setItem(LKEY,JSON.stringify(LEARN))}catch{}};
+  const STASH={rows:[],libP:null,id:0},LKEY='tibiaLootInfoStashV2';let LEARN=[];try{LEARN=JSON.parse(localStorage.getItem(LKEY)||'[]')}catch{}
+  const stashFp=px=>{const o=[];for(let by=0;by<6;by++)for(let bx=0;bx<10;bx++){const x1=3+Math.floor(bx*31/10),x2=3+Math.floor((bx+1)*31/10),y1=3+Math.floor(by*19/6),y2=3+Math.floor((by+1)*19/6);let r=0,g=0,b=0,n=0;for(let y=y1;y<y2;y++)for(let x=x1;x<x2;x++){const q=(y*36+x)*3;r+=px[q];g+=px[q+1];b+=px[q+2];n++}o.push(Math.round(r/n),Math.round(g/n),Math.round(b/n))}return o};
+  const fpDist=(a,b)=>{let t=0;for(let i=0;i<a.length;i++)t+=Math.abs(a[i]-b[i]);return t/a.length};
+  const stashFind=fp=>{let bd=1e9,bn=null;for(const e of LEARN){const d=fpDist(fp,e.fp);if(d<bd){bd=d;bn=e.n}}return bd<=8?bn:null};
+  const stashLearn=r=>{if(!r.fp||!r.item)return;const i=LEARN.findIndex(e=>fpDist(e.fp,r.fp)<=4);if(i>=0)LEARN[i]={fp:r.fp,n:r.item};else LEARN.push({fp:r.fp,n:r.item});if(LEARN.length>1200)LEARN.shift();try{localStorage.setItem(LKEY,JSON.stringify(LEARN))}catch{}};
   const GLK=Object.entries({'0':'.####.|##..##|##..##|##..##|##..##|##..##|##..##|.####.','1':'.##.|###.|.##.|.##.|.##.|.##.|.##.|####','2':'.####.|##..##|....##|...##.|..##..|.##...|##....|######','3':'.####.|##..##|....##|..###.|....##|....##|##..##|.####.','4':'....#.|...##.|..###.|.#.##.|#..##.|######|...##.|...##.','5':'.#####|.##...|.##...|.####.|....##|....##|##..##|.####.','6':'..###.|.##...|##....|#####.|##..##|##..##|##..##|.####.','7':'######|....##|...##.|...##.|..##..|..##..|.##...|.##...','8':'.####.|##..##|##..##|.####.|##..##|##..##|##..##|.####.','9':'.####.|##..##|##..##|##..##|.#####|....##|...##.|.###..',',':'##|##|##|#.'}).map(([c,t])=>({c,rows:t.split('|')}));
   const loadImg=src=>new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=src});
 
@@ -577,7 +579,7 @@ async function canonItem(name){const n=String(name).trim(),hit=[...itemCatalog,.
       return lib})()}
   function stashGrid(d,W,H){
     const N=W*H,dark=new Uint8Array(N),rh=new Uint16Array(N),rv=new Uint16Array(N);
-    for(let i=0,p=0;i<N;i++,p+=4)dark[i]=d[p]<=24&&d[p+1]<=24&&d[p+2]<=24?1:0;
+    for(let i=0,p=0;i<N;i++,p+=4)dark[i]=d[p]<=40&&d[p+1]<=40&&d[p+2]<=40?1:0;
     for(let y=0;y<H;y++)for(let x=W-1;x>=0;x--){const i=y*W+x;rh[i]=dark[i]?(x<W-1?rh[i+1]:0)+1:0}
     for(let y=H-1;y>=0;y--)for(let x=0;x<W;x++){const i=y*W+x;rv[i]=dark[i]?(y<H-1?rv[i+W]:0)+1:0}
     const cs=[],hist=new Map();
@@ -590,17 +592,29 @@ async function canonItem(name){const n=String(name).trim(),hit=[...itemCatalog,.
       let t=0,l=0;for(let k=0;k<34;k++){if(dark[y*W+x+k])t++;if(dark[(y+k)*W+x])l++}
       if(t>=20&&l>=20)out.push([x,y])}
     return out}
-  function stashRead(d,W,sx,sy){
-    const m=[];for(let r=0;r<12;r++){const row=new Uint8Array(40);for(let c=0;c<40;c++){const x=sx-8+c,y=sy+19+r;if(x<0||x>=W)continue;const p=(y*W+x)*4;row[c]=Math.abs(d[p]-191)<=2&&Math.abs(d[p+1]-191)<=2&&Math.abs(d[p+2]-191)<=2?1:0}m.push(row)}
+  function stashDigitColor(d,W,slots){
+    const h=new Float64Array(260);let n=0;const px=(cb)=>{for(const[x0,y0]of slots){const sx=x0+2,sy=y0+2;for(let y=21;y<=28;y++)for(let x=16;x<=28;x++){const p=((sy+y)*W+sx+x)*4,r=d[p],g=d[p+1],b=d[p+2];if(r===undefined)continue;const mx=Math.max(r,g,b);if(mx-Math.min(r,g,b)>16||mx<120||mx>240)continue;cb(r,g,b)}}};
+    px((r,g,b)=>{h[Math.round((r+g+b)/3)]++;n++});
+    if(n<30)return{G:191,tol:2};
+    const near=v=>h[v-2]+h[v-1]+h[v]+h[v+1]+h[v+2];let G0=191,bm=-1;for(let v=122;v<=238;v++)if(h[v]>bm){bm=h[v];G0=v}
+    let mass=0;for(let v=G0-26;v<=G0-5;v++)if(v>=100)mass+=h[v];
+    const ext=G0>=185&&mass>=0.25*h[G0]?26:0;
+    if(h[G0]>=0.6*near(G0))return{G:G0,tol:2,ext};
+    let G=G0,bv=-1;for(let v=122;v<=238;v++){const t=near(v);if(t>bv){bv=t;G=v}}
+    let s2=0,m=0;px((r,g,b)=>{if(Math.abs((r+g+b)/3-G)<=8){s2+=(r-G)**2+(g-G)**2+(b-G)**2;m++}});
+    const sd=m?Math.sqrt(s2/(3*m)):0;return{G,tol:Math.max(4,Math.min(16,Math.round(3*sd+2))),ext:0}}
+  function stashRead(d,W,sx,sy,dc){
+    const G=dc?dc.G:191,tol=dc?dc.tol:2,ext=dc&&dc.ext?dc.ext:0,noisy=tol>3,gLo=G-ext-tol,gHi=G+tol+(ext?4:0);
+    const m=[];for(let r=0;r<12;r++){const row=new Uint8Array(40);for(let c=0;c<40;c++){const x=sx-8+c,y=sy+19+r;if(x<0||x>=W)continue;const p=(y*W+x)*4;{const r=d[p],g=d[p+1],b=d[p+2];row[c]=r>=gLo&&r<=gHi&&g>=gLo&&g<=gHi&&b>=gLo&&b<=gHi&&(!ext||Math.max(r,g,b)-Math.min(r,g,b)<=8)?1:0}}m.push(row)}
     const col=c=>{for(let r=0;r<12;r++)if(m[r][c])return true;return false};
-    const fit=(e0,c0)=>{let bst=null,bs=99;for(const g of GLK){const gw=g.rows[0].length,gh=g.rows.length,top=gh===8?2:8;if(e0-gw+1<c0)continue;let miss=0,extra=0;for(let r=0;r<gh;r++)for(let k=0;k<gw;k++){const a=m[top+r]?m[top+r][e0-gw+1+k]:0,t=g.rows[r][k]==='#'?1:0;if(t&&!a)miss++;else if(!t&&a)extra++}const sc=miss*4+extra;if(miss<=1&&sc<bs){bs=sc;bst={g,gw}}}return bs<=10?bst:null};
+    const fit=(e0,c0)=>{let bst=null,bs=99;for(const g of GLK){const gw=g.rows[0].length,gh=g.rows.length,top=gh===8?2:8;if(e0-gw+1<c0)continue;let miss=0,extra=0;for(let r=0;r<gh;r++)for(let k=0;k<gw;k++){const a=m[top+r]?m[top+r][e0-gw+1+k]:0,t=g.rows[r][k]==='#'?1:0;if(t&&!a)miss++;else if(!t&&a)extra++}const sc=miss*4+extra;if(miss<=(noisy?3:1)&&sc<bs){bs=sc;bst={g,gw}}}return bs<=(noisy?20:10)?bst:null};
     const out=[];let c=0,minC=99,bad=false;
     while(c<40){if(!col(c)){c++;continue}let e=c;while(e+1<40&&col(e+1))e++;
       let r0=12,r1=-1;for(let r=0;r<12;r++)for(let k=c;k<=e;k++)if(m[r][k]){if(r<r0)r0=r;if(r>r1)r1=r}
       const w=e-c+1,h=r1-r0+1;let best=null,bd=99;
       for(const g of GLK){const gw=g.rows[0].length,gh=g.rows.length;if(gh!==h||Math.abs(gw-w)>1)continue;let dist=0;for(let r=0;r<gh;r++)for(let k=0;k<Math.max(gw,w);k++){const a=k<w?m[r0+r][c+k]:0,b=k<gw&&g.rows[r][k]==='#'?1:0;if(a!==b)dist++}if(dist<bd){bd=dist;best=g}}
       const like=(h===8&&r0===2)||(h===4&&r0===8);
-      if(best&&bd<=2){out.push(best.c);if(bd>0)bad=true;minC=Math.min(minC,c)}
+      if(best&&bd<=(noisy?4:2)){out.push(best.c);if(bd>0)bad=true;minC=Math.min(minC,c)}
       else{const tmp=[];let e0=e;while(e0>=c){while(e0>=c&&!col(e0))e0--;if(e0<c)break;const f=fit(e0,c);if(!f)break;tmp.unshift(f.g.c);minC=Math.min(minC,e0-f.gw+1);e0-=f.gw}
         if(tmp.length){out.push(...tmp);bad=true}else if(like){out.push('?');bad=true;minC=Math.min(minC,c)}}
       c=e+1}
@@ -621,23 +635,23 @@ async function canonItem(name){const n=String(name).trim(),hit=[...itemCatalog,.
     const slots=stashGrid(d,W,H);
     if(!slots.length){msg.textContent='Nie wykryłem siatki slotów Stasha (rozstaw 37 px = skala interfejsu 100%). Wrzuć nieskompresowany PNG z klienta w skali 100%.';return}
     const id=++STASH.id;let ok=0,low=0,skipped=0;const tc=document.createElement('canvas');tc.width=tc.height=32;const tx=tc.getContext('2d');
-    let si=0;
+    const dc=stashDigitColor(d,W,slots);let si=0;
     for(const[x0,y0]of slots){
       if(++si%4===0){msg.textContent='Analizuję '+(file.name||'screen')+'… '+si+'/'+slots.length;await new Promise(r=>setTimeout(r,0))}
-      const sx=x0+2,sy=y0+2;      const rd=stashRead(d,W,sx,sy),mask=new Uint8Array(36*36);
+      const sx=x0+2,sy=y0+2;      const rd=stashRead(d,W,sx,sy,dc),mask=new Uint8Array(36*36);
       if(rd.minC<99){const c0=Math.max(0,rd.minC-9)+2;for(let y=22;y<34;y++)for(let x=c0;x<36;x++)mask[y*36+x]=1}
       const px=new Uint8Array(36*36*3),im=tx.createImageData(32,32);
       for(let y=0;y<36;y++)for(let x=0;x<36;x++){const p=((y0+y)*W+x0+x)*4,q=(y*36+x)*3;px[q]=d[p];px[q+1]=d[p+1];px[q+2]=d[p+2]}
       for(let y=0;y<32;y++)for(let x=0;x<32;x++){const p=((sy+y)*W+sx+x)*4,o=(y*32+x)*4;im.data[o]=d[p];im.data[o+1]=d[p+1];im.data[o+2]=d[p+2];im.data[o+3]=255}
-      const sig=stashSig(px),lr=LEARN[sig],mt=lr?{n:lr,score:0}:stashMatch(px,mask,lib),hasNum=rd.s.length>0,good=mt.n&&mt.score<=35;
+      const fp=stashFp(px),lr=stashFind(fp),mt=lr?{n:lr,score:0}:stashMatch(px,mask,lib),hasNum=rd.s.length>0,good=mt.n&&mt.score<=35;
       if(!hasNum&&!(mt.n&&mt.score<=55)){skipped++;continue}
       tx.putImageData(im,0,0);
       const digits=rd.s.replace(/,/g,''),num=/^\d+$/.test(digits)?parseInt(digits,10):null;
-      const flags=[];if(!good)flags.push(mt.n&&mt.score<=55?'niepewny item':'nierozpoznany item');if(num==null)flags.push(hasNum?'nieczytelna liczba':'brak liczby');else if(rd.bad)flags.push('sprawdź liczbę');
+      const flags=[];if(!good)flags.push(mt.n&&mt.score<=55?'niepewny item':'nierozpoznany item');if(num==null)flags.push(hasNum?'nieczytelna liczba (odczyt: '+rd.s+')':'brak liczby');else if(rd.bad)flags.push('sprawdź liczbę');
       if(good)ok++;else low++;
-      STASH.rows.push({id,sig,thumb:tc.toDataURL(),item:good||(mt.n&&mt.score<=55)?mt.n:'',count:num==null?1:num,flags,score:mt.score});
+      STASH.rows.push({id,fp,thumb:tc.toDataURL(),item:good||(mt.n&&mt.score<=55)?mt.n:'',count:num==null?1:num,flags,score:mt.score});
     }
-    msg.textContent=(file.name||'screen')+': wykryto '+slots.length+' slotów, rozpoznano '+ok+(low?', do sprawdzenia '+low+' (wybierz item w tabeli — strona zapamięta tę grafikę)':'')+(skipped?', puste: '+skipped:'')+'.';
+    msg.textContent=(file.name||'screen')+': wykryto '+slots.length+' slotów, rozpoznano '+ok+(low?', do sprawdzenia '+low+' (wybierz item w tabeli — strona zapamięta tę grafikę)':'')+(skipped?', puste: '+skipped:'')+'.'+(dc.tol>3?' Wykryto szum w obrazie (kolor cyfr '+dc.G+', tolerancja '+dc.tol+') — liczby czytane w trybie tolerancyjnym, sprawdź je.':'');
     stashDraw();stashCalc()}
   function stashDraw(){
     const el=document.getElementById('stashRows');
